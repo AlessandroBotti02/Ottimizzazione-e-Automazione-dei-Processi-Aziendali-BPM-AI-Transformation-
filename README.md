@@ -90,5 +90,3 @@ Capisco → (interviste + mappa)
 Misuro → (FTE + dati)
 Valuto → (compliance + AI readiness)
 Miglioro → (TO-BE)
-
--
