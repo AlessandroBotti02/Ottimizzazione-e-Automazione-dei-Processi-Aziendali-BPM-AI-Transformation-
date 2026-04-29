@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BPM Framework — Guida Operativa</title>
+<style>
+:root {
+  --bg:      #0e0e0f;
+  --bg2:     #161618;
+  --bg3:     #1e1e21;
+  --bg4:     #252528;
+  --line:    rgba(255,255,255,0.11);
+  --line2:   rgba(255,255,255,0.18);
+  --tx:      #ffffff;
+  --tx2:     #ffffff;
+  --tx3:     #ffffff;
+  --accent:  #e05a3a;
+  --accent2: #f08450;
+  --blue:    #4a8fd4;
+  --green:   #4aaa6a;
+  --amber:   #d4902a;
+  --red:     #d44a4a;
+  --mono: Menlo, 'Courier New', monospace;
+  --sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --r: 4px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: var(--sans); background: var(--bg); color: var(--tx); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+/* SIDEBAR */
+.sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 252px; background: var(--bg2); border-right: 1px solid var(--line); display: flex; flex-direction: column; z-index: 200; transform: translateX(-252px); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); }
+.sidebar.open { transform: translateX(0); }
+.sb-logo { padding: 22px 20px 18px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+.brand { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; color: var(--tx); text-transform: uppercase; }
+.tagline { font-family: var(--mono); font-size: 9px; color: var(--tx3); margin-top: 3px; letter-spacing: 0.08em; text-transform: uppercase; }
+.sb-nav { padding: 10px 0; flex: 1; overflow-y: auto; }
+.nav-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tx3); padding: 14px 18px 5px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 7px 18px; cursor: pointer; border-left: 2px solid transparent; color: var(--tx2); font-size: 12px; transition: color 0.12s, background 0.12s; user-select: none; }
+.nav-item:hover { background: rgba(255,255,255,0.04); color: var(--tx); }
+.nav-item.active { border-left-color: var(--accent); color: var(--tx); background: rgba(224,90,58,0.1); }
+.nav-num { font-family: var(--mono); font-size: 9px; color: var(--tx3); min-width: 18px; }
+.nav-item.active .nav-num { color: var(--accent2); }
+
+/* HAM */
+.ham { position: fixed; top: 16px; left: 16px; z-index: 300; width: 34px; height: 34px; background: var(--bg2); border: 1px solid var(--line2); border-radius: var(--r); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: background 0.15s; }
+.ham:hover { background: var(--bg3); }
+.ham span { display: block; width: 14px; height: 1.5px; background: var(--tx2); border-radius: 1px; transition: all 0.2s; }
+.ham.open span:nth-child(1) { transform: translateY(5.5px) rotate(45deg); }
+.ham.open span:nth-child(2) { opacity: 0; }
+.ham.open span:nth-child(3) { transform: translateY(-5.5px) rotate(-45deg); }
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 190; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+.overlay.show { opacity: 1; pointer-events: all; }
+
+/* PAGES */
+.pages { position: fixed; inset: 0; overflow: hidden; }
+.page { position: absolute; inset: 0; overflow-y: auto; display: none; }
+.page.active { display: block; animation: fi 0.2s ease; }
+@keyframes fi { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+.pi { max-width: 1080px; margin: 0 auto; padding: 68px 52px 80px; }
+
+/* BADGES */
+.badge { display: inline-flex; align-items: center; font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: 2px; margin-bottom: 14px; }
+.b-blue  { background: rgba(74,143,212,0.1);  color: var(--blue);  border: 1px solid rgba(74,143,212,0.2); }
+.b-red   { background: rgba(212,74,74,0.1);   color: var(--red);   border: 1px solid rgba(212,74,74,0.2); }
+.b-green { background: rgba(74,170,106,0.1);  color: var(--green); border: 1px solid rgba(74,170,106,0.2); }
+.b-amber { background: rgba(212,144,42,0.1);  color: var(--amber); border: 1px solid rgba(212,144,42,0.2); }
+
+/* TYPO */
+.ptitle { font-size: 38px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 10px; color: var(--tx); }
+.psub   { font-size: 14px; color: var(--tx2); max-width: 540px; line-height: 1.65; margin-bottom: 38px; }
+.secnum { font-size: 88px; font-weight: 700; color: rgba(255,255,255,0.08); letter-spacing: -0.05em; line-height: 1; user-select: none; margin-top: -10px; margin-bottom: -18px; }
+.phase-hdr { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; }
+
+/* STATS */
+.stat-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 36px; }
+.stat-card { background: var(--bg2); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; }
+.stat-n { font-size: 34px; font-weight: 700; color: var(--accent2); letter-spacing: -0.03em; line-height: 1; }
+.stat-l { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--tx3); margin-top: 5px; }
+
+/* MAP */
+.mapwrap { background: var(--bg2); border: 1px solid var(--line); border-radius: 6px; padding: 24px; }
+.map-lbl { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--tx3); margin-bottom: 18px; }
+.map-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 16px; }
+.map-macro { position: relative; background: var(--bg3); border: 1px solid var(--line); border-radius: var(--r); padding: 13px; cursor: pointer; transition: all 0.18s; overflow: hidden; }
+.map-macro::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; opacity: 0.4; transition: opacity 0.18s; }
+.m-blue::after  { background: var(--blue); }
+.m-amber::after { background: var(--amber); }
+.m-green::after { background: var(--green); }
+.m-red::after   { background: var(--red); }
+.map-macro:hover { background: var(--bg4); border-color: var(--line2); transform: translateY(-1px); }
+.map-macro:hover::after { opacity: 1; }
+.map-macro.mact { border-color: var(--line2); background: var(--bg4); }
+.m-blue.mact  { border-color: rgba(74,143,212,0.35); }
+.m-amber.mact { border-color: rgba(212,144,42,0.35); }
+.m-green.mact { border-color: rgba(74,170,106,0.35); }
+.m-red.mact   { border-color: rgba(212,74,74,0.35); }
+.map-macro.mact::after { opacity: 1; }
+.mn-tag  { font-family: var(--mono); font-size: 9px; color: var(--tx3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.mn-name { font-size: 12px; font-weight: 600; color: var(--tx); line-height: 1.3; }
+.mn-sub  { font-family: var(--mono); font-size: 9px; color: var(--tx3); margin-top: 7px; }
+
+/* MAP PANEL */
+.mpanel { display: none; background: var(--bg3); border: 1px solid var(--line); border-radius: var(--r); padding: 18px 22px; margin-bottom: 6px; }
+.mpanel.show { display: block; animation: fi 0.18s ease; }
+.panel-top { display: flex; align-items: flex-start; gap: 20px; margin-bottom: 14px; }
+.panel-title { font-size: 14px; font-weight: 600; color: var(--tx); }
+.panel-desc { font-size: 12px; color: var(--tx2); line-height: 1.55; margin-top: 3px; max-width: 480px; }
+.ptags { display: flex; flex-wrap: wrap; gap: 5px; flex-shrink: 0; }
+.ptag { font-family: var(--mono); font-size: 9px; padding: 2px 7px; border-radius: 2px; border: 1px solid var(--line2); color: var(--tx3); }
+.pphases { display: flex; flex-wrap: wrap; gap: 7px; }
+.pph-link { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg4); border: 1px solid var(--line); border-radius: var(--r); cursor: pointer; transition: border-color 0.12s; flex: 1; min-width: 180px; }
+.pph-link:hover { border-color: var(--line2); }
+.pph-num  { font-family: var(--mono); font-size: 9px; color: var(--tx3); }
+.pph-name { font-size: 12px; font-weight: 500; color: var(--tx); }
+.pph-go   { margin-left: auto; font-size: 10px; color: var(--tx3); }
+
+/* STEP BAR */
+.stepbar { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-top: 6px; }
+.step-item { padding: 9px 12px; border-radius: var(--r); border: 1px solid; }
+.s-blue  { background: rgba(74,143,212,0.07);  border-color: rgba(74,143,212,0.15); }
+.s-amber { background: rgba(212,144,42,0.07);  border-color: rgba(212,144,42,0.15); }
+.s-green { background: rgba(74,170,106,0.07);  border-color: rgba(74,170,106,0.15); }
+.s-red   { background: rgba(212,74,74,0.07);   border-color: rgba(212,74,74,0.15); }
+.sn { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: var(--tx3); margin-bottom: 2px; }
+.st { font-size: 12px; font-weight: 600; color: var(--tx); }
+.ss { font-size: 11px; color: var(--tx3); margin-top: 1px; }
+
+/* PHASE CONTENT */
+.info-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 24px; }
+.ic { padding: 12px 15px; background: var(--bg2); border: 1px solid var(--line); border-radius: var(--r); }
+.ic-l { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; color: var(--tx3); margin-bottom: 4px; }
+.ic-v { font-size: 13px; font-weight: 500; color: var(--tx); }
+.cw { background: var(--bg2); border: 1px solid var(--line); border-left: 2px solid var(--tx3); border-radius: var(--r); padding: 13px 17px; margin-bottom: 24px; }
+.cw-l { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; color: var(--tx3); margin-bottom: 5px; }
+.cw-t { font-size: 12px; color: var(--tx2); line-height: 1.6; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.blk { background: var(--bg2); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; }
+.blk-t { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; color: var(--tx3); margin-bottom: 10px; }
+.blk ul { list-style: none; }
+.blk ul li { font-size: 12px; color: var(--tx2); padding: 4px 0; border-bottom: 1px solid var(--line); display: flex; align-items: flex-start; gap: 7px; line-height: 1.45; }
+.blk ul li:last-child { border-bottom: none; }
+.blk ul li::before { content: '–'; color: var(--tx3); flex-shrink: 0; margin-top: 1px; }
+.divider { height: 1px; background: var(--line); margin: 28px 0; }
+
+/* PROMPTS */
+.pb { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.pt { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; color: var(--tx); }
+.filters { display: flex; gap: 5px; flex-wrap: wrap; }
+.fbtn { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .06em; padding: 4px 10px; border: 1px solid var(--line2); border-radius: 2px; background: none; color: var(--tx3); cursor: pointer; transition: all 0.12s; }
+.fbtn:hover { background: var(--bg3); color: var(--tx); }
+.fbtn.on { background: var(--tx); color: var(--bg); border-color: var(--tx); }
+.psrch { width: 100%; padding: 8px 13px; border: 1px solid var(--line2); border-radius: var(--r); background: var(--bg2); font-family: var(--sans); font-size: 12px; color: var(--tx); margin-bottom: 12px; outline: none; transition: border-color 0.12s; }
+.psrch:focus { border-color: var(--line2); }
+.psrch::placeholder { color: var(--tx3); }
+.pgrid { display: grid; gap: 10px; }
+.pcard { background: var(--bg2); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; transition: border-color 0.12s; }
+.pcard:hover { border-color: var(--line2); }
+.pcard.hidden { display: none; }
+.pch { padding: 11px 15px; display: flex; align-items: center; gap: 9px; border-bottom: 1px solid var(--line); background: var(--bg3); }
+.ptype { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; padding: 2px 7px; border-radius: 2px; flex-shrink: 0; }
+.pname { font-size: 12px; font-weight: 500; color: var(--tx); flex: 1; }
+.cpbtn { display: flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .06em; padding: 4px 9px; border: 1px solid var(--line2); border-radius: 2px; background: none; color: var(--tx3); cursor: pointer; transition: all 0.12s; flex-shrink: 0; }
+.cpbtn:hover { background: var(--tx); color: var(--bg); border-color: var(--tx); }
+.cpbtn.copied { background: var(--green); color: #fff; border-color: var(--green); }
+.pbody { padding: 13px 15px; }
+.ptext { font-family: var(--mono); font-size: 11px; color: var(--tx2); line-height: 1.75; white-space: pre-wrap; background: var(--bg3); padding: 11px 13px; border-radius: var(--r); border: 1px solid var(--line); margin-bottom: 9px; }
+.pmeta { display: flex; gap: 14px; flex-wrap: wrap; }
+.pmi { font-family: var(--mono); font-size: 9px; color: var(--tx3); }
+.pmi strong { color: var(--tx2); }
+.notes-l { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; color: var(--tx3); margin-bottom: 5px; display: block; margin-top: 24px; }
+.notes-ta { width: 100%; min-height: 85px; border: 1px solid var(--line); border-radius: var(--r); padding: 9px 12px; font-family: var(--sans); font-size: 12px; color: var(--tx); background: var(--bg2); resize: vertical; outline: none; line-height: 1.6; transition: border-color 0.12s; }
+.notes-ta:focus { border-color: var(--line2); }
+.notes-ta::placeholder { color: var(--tx3); }
+
+/* AUTH + PROMPT ADMIN */
+.auth-gate { position: fixed; inset: 0; z-index: 1200; background: rgba(14,14,15,0.95); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.auth-gate.hidden { display: none; }
+.auth-card { width: 100%; max-width: 430px; background: var(--bg2); border: 1px solid var(--line2); border-radius: 8px; padding: 22px; }
+.auth-title { font-size: 18px; font-weight: 700; color: var(--tx); margin-bottom: 8px; }
+.auth-sub { font-size: 12px; color: var(--tx2); margin-bottom: 14px; }
+.auth-inp { width: 100%; padding: 10px 12px; background: var(--bg3); border: 1px solid var(--line2); border-radius: var(--r); color: var(--tx); font-size: 13px; outline: none; }
+.auth-inp:focus { border-color: var(--tx2); }
+.auth-row { margin-top: 12px; display: flex; gap: 8px; }
+.auth-btn { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; padding: 8px 12px; border: 1px solid var(--line2); border-radius: var(--r); background: var(--tx); color: var(--bg); cursor: pointer; }
+.auth-msg { margin-top: 8px; font-size: 11px; color: var(--red); min-height: 16px; }
+
+.prompt-modal { position: fixed; inset: 0; z-index: 1100; background: rgba(0,0,0,0.65); display: none; align-items: center; justify-content: center; padding: 16px; }
+.prompt-modal.show { display: flex; }
+.prompt-card { width: 100%; max-width: 760px; max-height: 92vh; overflow-y: auto; background: var(--bg2); border: 1px solid var(--line2); border-radius: 8px; padding: 18px; }
+.pm-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.pm-title { font-size: 16px; font-weight: 700; color: var(--tx); }
+.pm-close { background: none; border: 1px solid var(--line2); color: var(--tx2); border-radius: var(--r); width: 28px; height: 28px; cursor: pointer; }
+.pm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pm-grid .full { grid-column: 1 / -1; }
+.pm-lbl { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; color: var(--tx3); margin-bottom: 5px; display: block; }
+.pm-inp, .pm-ta, .pm-sel { width: 100%; background: var(--bg3); border: 1px solid var(--line2); border-radius: var(--r); color: var(--tx); padding: 8px 10px; font-size: 12px; outline: none; }
+.pm-ta { min-height: 120px; resize: vertical; line-height: 1.6; }
+.pm-inp:focus, .pm-ta:focus, .pm-sel:focus { border-color: var(--tx2); }
+.pm-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.btn-ghost { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; padding: 8px 10px; border: 1px solid var(--line2); background: transparent; color: var(--tx2); border-radius: var(--r); cursor: pointer; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 18px; right: 18px; background: var(--tx); color: var(--bg); font-family: var(--mono); font-size: 10px; padding: 7px 13px; border-radius: var(--r); opacity: 0; transform: translateY(5px); transition: all 0.2s; z-index: 999; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateY(0); }
+::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<button class="ham" id="hamBtn" onclick="toggleNav()"><span></span><span></span><span></span></button>
+<div class="overlay" id="ovl" onclick="closeNav()"></div>
+
+<aside class="sidebar" id="sb">
+  <div class="sb-logo">
+    <div class="brand">BPM Framework</div>
+    <div class="tagline">Guida Operativa v1.0</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-lbl">Overview</div>
+    <div class="nav-item active" onclick="go('home',this)"><span class="nav-num">◈</span> Home &amp; Mappa</div>
+    <div class="nav-lbl">Fasi Progetto</div>
+    <div class="nav-item" onclick="go('s1',this)"><span class="nav-num">01</span> Impostazione iniziale</div>
+    <div class="nav-item" onclick="go('s2',this)"><span class="nav-num">02</span> Analisi compliance</div>
+    <div class="nav-item" onclick="go('s3',this)"><span class="nav-num">03</span> Interviste di processo</div>
+    <div class="nav-item" onclick="go('s4',this)"><span class="nav-num">04</span> Modellazione AS-IS</div>
+    <div class="nav-item" onclick="go('s5',this)"><span class="nav-num">05</span> Analisi FTE</div>
+    <div class="nav-item" onclick="go('s6',this)"><span class="nav-num">06</span> Analisi dati</div>
+    <div class="nav-item" onclick="go('s7',this)"><span class="nav-num">07</span> AI Readiness</div>
+    <div class="nav-item" onclick="go('s8',this)"><span class="nav-num">08</span> Redesign TO-BE</div>
+    <div class="nav-item" onclick="go('s9',this)"><span class="nav-num">09</span> Metriche &amp; KPI</div>
+    <div class="nav-item" onclick="go('s10',this)"><span class="nav-num">10</span> Output finale</div>
+  </nav>
+</aside>
+
+<div class="pages">
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+<div class="pi">
+  <div class="badge b-blue">Framework operativo</div>
+  <h1 class="ptitle">Business Process<br>Optimization</h1>
+  <p class="psub">Metodologia strutturata per analizzare, misurare, valutare e migliorare i processi aziendali con supporto AI e CoWork.</p>
+  <div class="stat-row">
+    <div class="stat-card"><div class="stat-n">10</div><div class="stat-l">Fasi</div></div>
+    <div class="stat-card"><div class="stat-n">4</div><div class="stat-l">Macro aree</div></div>
+    <div class="stat-card"><div class="stat-n">40+</div><div class="stat-l">Prompt pronti</div></div>
+    <div class="stat-card"><div class="stat-n">6</div><div class="stat-l">Output finali</div></div>
+  </div>
+  <div class="mapwrap">
+    <div class="map-lbl">Mappa macroprocessi — clicca un nodo per espandere</div>
+    <div class="map-grid">
+      <div class="map-macro m-blue" id="mn-discovery" onclick="togglePanel('discovery')">
+        <div class="mn-tag">Macro 1</div>
+        <div class="mn-name">Discovery &amp; Setup</div>
+        <div class="mn-sub">Fasi 1–3 · 3 processi</div>
+      </div>
+      <div class="map-macro m-amber" id="mn-modeling" onclick="togglePanel('modeling')">
+        <div class="mn-tag">Macro 2</div>
+        <div class="mn-name">Analisi &amp; Modellazione</div>
+        <div class="mn-sub">Fasi 4–6 · 3 processi</div>
+      </div>
+      <div class="map-macro m-green" id="mn-ai" onclick="togglePanel('ai')">
+        <div class="mn-tag">Macro 3</div>
+        <div class="mn-name">AI &amp; Redesign</div>
+        <div class="mn-sub">Fasi 7–8 · 2 processi</div>
+      </div>
+      <div class="map-macro m-red" id="mn-delivery" onclick="togglePanel('delivery')">
+        <div class="mn-tag">Macro 4</div>
+        <div class="mn-name">Misurazione &amp; Consegna</div>
+        <div class="mn-sub">Fasi 9–10 · 2 processi</div>
+      </div>
+    </div>
+
+    <div class="mpanel" id="panel-discovery">
+      <div class="panel-top">
+        <div><div class="panel-title">Discovery &amp; Setup</div><div class="panel-desc">Fondamenta del progetto: costruire una comprensione condivisa del cliente prima di entrare nel dettaglio. La mappa L1–L3 deve essere validata prima di qualsiasi intervista.</div></div>
+        <div class="ptags"><span class="ptag">Setup</span><span class="ptag">Mappa</span><span class="ptag">RACI</span><span class="ptag">KB</span><span class="ptag">Compliance</span></div>
+      </div>
+      <div class="pphases">
+        <div class="pph-link" onclick="goById('s1')"><span class="pph-num">Fase 01</span><span class="pph-name">Impostazione iniziale</span><span class="pph-go">→</span></div>
+        <div class="pph-link" onclick="goById('s2')"><span class="pph-num">Fase 02</span><span class="pph-name">Analisi compliance</span><span class="pph-go">→</span></div>
+        <div class="pph-link" onclick="goById('s3')"><span class="pph-num">Fase 03</span><span class="pph-name">Interviste di processo</span><span class="pph-go">→</span></div>
+      </div>
+    </div>
+
+    <div class="mpanel" id="panel-modeling">
+      <div class="panel-top">
+        <div><div class="panel-title">Analisi &amp; Modellazione</div><div class="panel-desc">Cuore quantitativo del progetto: trasforma le interviste in modelli BPMN AS-IS, dimensiona le risorse (FTE) e costruisce il modello dati. Base di tutto il redesign.</div></div>
+        <div class="ptags"><span class="ptag">BPMN</span><span class="ptag">FTE</span><span class="ptag">Dati</span><span class="ptag">Sistemi</span></div>
+      </div>
+      <div class="pphases">
+        <div class="pph-link" onclick="goById('s4')"><span class="pph-num">Fase 04</span><span class="pph-name">Modellazione AS-IS</span><span class="pph-go">→</span></div>
+        <div class="pph-link" onclick="goById('s5')"><span class="pph-num">Fase 05</span><span class="pph-name">Analisi FTE</span><span class="pph-go">→</span></div>
+        <div class="pph-link" onclick="goById('s6')"><span class="pph-num">Fase 06</span><span class="pph-name">Analisi dati</span><span class="pph-go">→</span></div>
+      </div>
+    </div>
+
+    <div class="mpanel" id="panel-ai">
+      <div class="panel-top">
+        <div><div class="panel-title">AI &amp; Redesign</div><div class="panel-desc">La fase più strategica: classificare i processi per livello di automazione, identificare use case AI concreti e ridisegnare il TO-BE.</div></div>
+        <div class="ptags"><span class="ptag">AI Readiness</span><span class="ptag">Use case</span><span class="ptag">BPR</span><span class="ptag">TO-BE</span></div>
+      </div>
+      <div class="pphases">
+        <div class="pph-link" onclick="goById('s7')"><span class="pph-num">Fase 07</span><span class="pph-name">AI Readiness &amp; Automazione</span><span class="pph-go">→</span></div>
+        <div class="pph-link" onclick="goById('s8')"><span class="pph-num">Fase 08</span><span class="pph-name">Redesign TO-BE</span><span class="pph-go">→</span></div>
+      </div>
+    </div>
+
+    <div class="mpanel" id="panel-delivery">
+      <div class="panel-top">
+        <div><div class="panel-title">Misurazione &amp; Consegna</div><div class="panel-desc">Fase conclusiva: KPI, scorecard e assembly di tutti i deliverable in un executive summary per il top management del cliente.</div></div>
+        <div class="ptags"><span class="ptag">KPI</span><span class="ptag">Scorecard</span><span class="ptag">Executive</span><span class="ptag">Roadmap</span></div>
+      </div>
+      <div class="pphases">
+        <div class="pph-link" onclick="goById('s9')"><span class="pph-num">Fase 09</span><span class="pph-name">Metriche &amp; KPI</span><span class="pph-go">→</span></div>
+        <div class="pph-link" onclick="goById('s10')"><span class="pph-num">Fase 10</span><span class="pph-name">Output finale</span><span class="pph-go">→</span></div>
+      </div>
+    </div>
+
+    <div class="stepbar">
+      <div class="step-item s-blue"> <div class="sn">Step 1</div><div class="st">Capisco</div><div class="ss">Interviste + mappa</div></div>
+      <div class="step-item s-amber"><div class="sn">Step 2</div><div class="st">Misuro</div><div class="ss">FTE + dati</div></div>
+      <div class="step-item s-green"><div class="sn">Step 3</div><div class="st">Valuto</div><div class="ss">Compliance + AI</div></div>
+      <div class="step-item s-red">  <div class="sn">Step 4</div><div class="st">Miglioro</div><div class="ss">Redesign TO-BE</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- FASE 1 -->
+<div class="page" id="page-s1"><div class="pi">
+  <div class="phase-hdr"><div><div class="badge b-blue">Fase 1 · Discovery</div><h1 class="ptitle">Impostazione<br>iniziale</h1><p class="psub">Raccogliere le informazioni base del cliente e costruire la mappa processi L1–L3 condivisa prima di qualsiasi intervista.</p></div><div class="secnum">01</div></div>
+  <div class="info-row"><div class="ic"><div class="ic-l">AI Level</div><div class="ic-v">Supporto</div></div><div class="ic"><div class="ic-l">Fase</div><div class="ic-v">Setup / Discovery</div></div><div class="ic"><div class="ic-l">Output chiave</div><div class="ic-v">Mappa L1–L3 validata</div></div></div>
+  <div class="cw"><div class="cw-l">Setup CoWork</div><div class="cw-t">Crea progetto <strong>BPM_[NomeCliente]</strong>. Sezione: <em>Mappa processi</em>. KB iniziale: settore, struttura org, perimetro (es. AFC), sistemi IT noti. Documento <em>Assunzioni iniziali</em> da aggiornare iterativamente.</div></div>
+  <div class="grid2">
+    <div class="blk"><div class="blk-t">Attività chiave</div><ul><li>Raccolta info base cliente (settore, dimensione, struttura)</li><li>Definizione perimetro progetto</li><li>Costruzione mappa processi L1, L2, L3</li><li>Identificazione attori e RACI alto livello</li><li>Validazione mappa con cliente prima delle interviste</li></ul></div>
+    <div class="blk"><div class="blk-t">Output attesi</div><ul><li>Mappa processi L1–L3 (tabella strutturata)</li><li>RACI alto livello per macro-processo</li><li>Perimetro progetto validato</li><li>Knowledge Base cliente inizializzata in CoWork</li><li>Lista sistemi IT coinvolti</li></ul></div>
+    <div class="blk"><div class="blk-t">Skill consigliate</div><ul><li>Process taxonomy builder</li><li>Org chart reader</li><li>Sector knowledge</li><li>RACI generator</li></ul></div>
+    <div class="blk"><div class="blk-t">Rischi &amp; Attenzioni</div><ul><li>Non iniziare interviste senza mappa validata</li><li>Verificare il perimetro con il cliente</li><li>Documentare tutte le assunzioni iniziali</li><li>Raccogliere contatti attori chiave</li></ul></div>
+  </div>
+  <div class="divider"></div>
+  <div class="pb"><div class="pt">Prompt — Fase 01</div><div class="filters" id="fil-s1"><button class="fbtn on" onclick="fp('s1','all',this)">Tutti</button><button class="fbtn" onclick="fp('s1','mappa',this)">Mappa</button><button class="fbtn" onclick="fp('s1','raci',this)">RACI</button><button class="fbtn" onclick="fp('s1','kb',this)">KB</button></div></div>
+  <input class="psrch" placeholder="Cerca nei prompt..." oninput="sp('s1',this.value)">
+  <div class="pgrid" id="pg-s1">
+    <div class="pcard" data-tags="mappa"><div class="pch"><span class="ptype b-blue">Mappa</span><span class="pname">Costruzione mappa processi L1–L3</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un esperto BPM con esperienza in consulenza organizzativa.
+
+Cliente: [NOME CLIENTE]
+Settore: [SETTORE]
+Perimetro iniziale: [ES. AFC, OPERATIONS, HR]
+Dimensione: [N. DIPENDENTI / FATTURATO]
+
+Costruisci una mappa processi su 3 livelli:
+- L1: Macro-aree (es. Processi core, Processi di supporto)
+- L2: Sotto-processi per ogni macro-area
+- L3: Attività principali per ogni sotto-processo
+
+Per ogni processo L3 indica:
+- Nome processo
+- Attore responsabile (ruolo)
+- Sistemi IT coinvolti (se noti)
+- Frequenza (continua / periodica / occasionale)
+- Interdipendenze con altri processi
+
+Formato: tabella markdown strutturata con livelli indentati.
+Tono: professionale, tecnico, preciso.
+Non inventare: usa [DA VERIFICARE] dove mancano dati.</div><div class="pmeta"><span class="pmi">Tipo: <strong>Mappa</strong></span><span class="pmi">Variabili: <strong>CLIENTE · SETTORE · PERIMETRO</strong></span><span class="pmi">Output: <strong>Tabella L1–L3</strong></span></div></div></div>
+    <div class="pcard" data-tags="raci"><div class="pch"><span class="ptype b-amber">RACI</span><span class="pname">Generazione RACI alto livello</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un esperto di organizzazione aziendale.
+
+Mappa processi L1–L3:
+[INCOLLA MAPPA]
+
+Ruoli/funzioni aziendali noti:
+[LISTA RUOLI: es. CFO, Responsabile AFC, Controller, ...]
+
+Costruisci una matrice RACI per i processi L2:
+- R: Responsible (chi esegue)
+- A: Accountable (chi risponde del risultato)
+- C: Consulted (chi viene consultato)
+- I: Informed (chi viene informato)
+
+Formato: tabella markdown (righe = processi L2, colonne = ruoli).
+Evidenzia con [?] i casi dubbi da verificare in intervista.
+Nota ruoli sovrapposti o gap di responsabilità.</div><div class="pmeta"><span class="pmi">Tipo: <strong>RACI</strong></span><span class="pmi">Input: <strong>Mappa L1–L3 · Lista ruoli</strong></span><span class="pmi">Output: <strong>Matrice RACI</strong></span></div></div></div>
+    <div class="pcard" data-tags="kb"><div class="pch"><span class="ptype b-green">KB</span><span class="pname">Inizializzazione Knowledge Base cliente</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un consulente BPM senior. Stai iniziando un progetto con un nuovo cliente.
+
+Informazioni disponibili:
+[INCOLLA TUTTE LE INFO SUL CLIENTE]
+
+Struttura una Knowledge Base iniziale in markdown:
+
+## 1. Anagrafica cliente
+## 2. Contesto organizzativo
+## 3. Perimetro progetto
+## 4. Sistemi IT noti
+## 5. Normative applicabili (ipotesi iniziale)
+## 6. Assunzioni e ipotesi da verificare
+## 7. Open points
+
+Usa [DA RACCOGLIERE] dove mancano informazioni.
+Tono: professionale, strutturato.</div><div class="pmeta"><span class="pmi">Tipo: <strong>KB</strong></span><span class="pmi">Variabili: <strong>INFO CLIENTE</strong></span><span class="pmi">Output: <strong>Documento KB markdown</strong></span></div></div></div>
+    <div class="pcard" data-tags="mappa"><div class="pch"><span class="ptype b-blue">Mappa</span><span class="pname">Domande di validazione mappa con cliente</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un facilitatore BPM. Devi preparare una sessione di validazione della mappa processi.
+
+Mappa processi da validare:
+[INCOLLA MAPPA L1–L3]
+
+Prepara:
+1. Domande di verifica per ogni macro-area L1 (max 3 per area)
+2. Checklist di completezza (cosa potrebbe mancare?)
+3. Ambiguità nella nomenclatura da chiarire
+4. Suggerimenti per facilitare la discussione
+
+Tono: colloquiale e facilitativo. Il cliente non è un esperto BPM.</div><div class="pmeta"><span class="pmi">Tipo: <strong>Mappa</strong></span><span class="pmi">Input: <strong>Mappa L1–L3</strong></span><span class="pmi">Output: <strong>Domande + checklist</strong></span></div></div></div>
+  </div>
+  <label class="notes-l">Note operative — Fase 01</label>
+  <textarea class="notes-ta" placeholder="Note specifiche per questo cliente / progetto..."></textarea>
+</div></div>
+
+<!-- FASE 2 -->
+<div class="page" id="page-s2"><div class="pi">
+  <div class="phase-hdr"><div><div class="badge b-red">Fase 2 · Compliance</div><h1 class="ptitle">Analisi<br>compliance</h1><p class="psub">Mappare le normative applicabili e costruire la matrice processo ↔ normativa ↔ criticità da verificare con il cliente.</p></div><div class="secnum">02</div></div>
+  <div class="info-row"><div class="ic"><div class="ic-l">AI Level</div><div class="ic-v">Alto supporto</div></div><div class="ic"><div class="ic-l">Fase</div><div class="ic-v">Compliance / Rischio</div></div><div class="ic"><div class="ic-l">Output chiave</div><div class="ic-v">Matrice compliance</div></div></div>
+  <div class="cw"><div class="cw-l">Setup CoWork</div><div class="cw-t">Sezione CoWork: <em>Compliance</em>. KB normative settore. Crea <em>Matrice Compliance</em> condivisibile con cliente. Alert su processi ad alto rischio.</div></div>
+  <div class="grid2">
+    <div class="blk"><div class="blk-t">Normative comuni</div><ul><li>GDPR (Reg. EU 2016/679)</li><li>D.Lgs. 231/2001 — resp. amministrativa</li><li>ISO 9001 — gestione qualità</li><li>ISO 27001 — sicurezza informazioni</li><li>D.Lgs. 81/2008 — sicurezza lavoro</li><li>Normative settoriali specifiche</li></ul></div>
+    <div class="blk"><div class="blk-t">Output attesi</div><ul><li>Matrice: processo ↔ normativa ↔ criticità</li><li>Lista normative applicabili verificate</li><li>Checklist verifica con cliente</li><li>Gap compliance iniziale</li><li>Processi ad alto rischio evidenziati</li></ul></div>
+    <div class="blk"><div class="blk-t">Criteri criticità</div><ul><li><strong>Alta:</strong> sanzioni dirette, blocco operatività</li><li><strong>Media:</strong> rischio reputazionale, audit</li><li><strong>Bassa:</strong> best practice, raccomandazioni</li></ul></div>
+    <div class="blk"><div class="blk-t">Attenzioni</div><ul><li>Verificare sempre con cliente l'applicabilità</li><li>Non assumere applicabilità automatica</li><li>Documentare le esclusioni motivate</li><li>Coinvolgere responsabile compliance</li></ul></div>
+  </div>
+  <div class="divider"></div>
+  <div class="pb"><div class="pt">Prompt — Fase 02</div><div class="filters" id="fil-s2"><button class="fbtn on" onclick="fp('s2','all',this)">Tutti</button><button class="fbtn" onclick="fp('s2','matrice',this)">Matrice</button><button class="fbtn" onclick="fp('s2','gap',this)">Gap</button><button class="fbtn" onclick="fp('s2','verifica',this)">Verifica</button></div></div>
+  <input class="psrch" placeholder="Cerca nei prompt..." oninput="sp('s2',this.value)">
+  <div class="pgrid" id="pg-s2">
+    <div class="pcard" data-tags="matrice"><div class="pch"><span class="ptype b-red">Matrice</span><span class="pname">Costruzione matrice compliance</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un consulente compliance esperto in normative italiane ed europee.
+
+Settore cliente: [SETTORE]
+Processi in scope: [LISTA PROCESSI L2]
+Dimensione azienda: [MICRO/PMI/GRANDE IMPRESA]
+
+Per ogni processo, analizza la rilevanza delle categorie normative:
+- GDPR e privacy
+- D.Lgs. 231/2001
+- Sicurezza sul lavoro D.Lgs. 81/2008
+- Normative fiscali e contabili
+- Normative settoriali specifiche
+- ISO/standard volontari rilevanti
+
+Matrice con colonne:
+| Processo | Normativa | Articolo/riferimento | Obbligo | Criticità (A/M/B) | Da verificare |
+
+Segnala con [?] le normative la cui applicabilità è incerta.</div><div class="pmeta"><span class="pmi">Tipo: <strong>Matrice</strong></span><span class="pmi">Variabili: <strong>SETTORE · PROCESSI · DIMENSIONE</strong></span><span class="pmi">Output: <strong>Tabella compliance</strong></span></div></div></div>
+    <div class="pcard" data-tags="gap"><div class="pch"><span class="ptype b-red">Gap</span><span class="pname">Analisi gap compliance iniziale</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un compliance analyst esperto.
+
+Matrice compliance: [INCOLLA]
+Presidi attuali noti: [NOTE SE DISPONIBILI]
+
+Identifica i gap più critici:
+1. Obblighi normativi senza presidio identificato
+2. Processi ad alta criticità con maggior rischio
+3. Quick win (azioni semplici ad alto impatto)
+4. Aree da approfondire in intervista
+
+Output:
+- Executive summary (3-5 righe)
+- Tabella: Normativa | Gap | Impatto | Priorità | Azione suggerita
+- Lista domande da porre al cliente</div><div class="pmeta"><span class="pmi">Tipo: <strong>Gap</strong></span><span class="pmi">Input: <strong>Matrice + Note</strong></span><span class="pmi">Output: <strong>Gap analysis + domande</strong></span></div></div></div>
+    <div class="pcard" data-tags="verifica"><div class="pch"><span class="ptype b-amber">Verifica</span><span class="pname">Checklist verifica applicabilità con cliente</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un consulente BPM. Devi facilitare una sessione con il responsabile compliance.
+
+Normative da verificare: [LISTA DA MATRICE CON [?]]
+Settore: [SETTORE]
+Referente cliente: [RUOLO]
+
+Prepara:
+1. Domande chiuse (Sì/No) per verificare applicabilità
+2. Per ogni domanda: contesto breve (perché è rilevante)
+3. Domande di follow-up per i "Sì"
+4. Note per il consulente
+
+Formato: lista numerata, tono colloquiale non tecnico-legale.</div><div class="pmeta"><span class="pmi">Tipo: <strong>Verifica</strong></span><span class="pmi">Variabili: <strong>NORMATIVE · SETTORE · RUOLO</strong></span><span class="pmi">Output: <strong>Checklist verifica</strong></span></div></div></div>
+  </div>
+  <label class="notes-l">Note operative — Fase 02</label>
+  <textarea class="notes-ta" placeholder="Es. normative identificate, contatti compliance cliente..."></textarea>
+</div></div>
+
+<!-- FASE 3 -->
+<div class="page" id="page-s3"><div class="pi">
+  <div class="phase-hdr"><div><div class="badge b-blue">Fase 3 · Discovery</div><h1 class="ptitle">Interviste<br>di processo</h1><p class="psub">Raccogliere step-by-step attività, sistemi, dati e pain point per ogni processo L3, un attore alla volta.</p></div><div class="secnum">03</div></div>
+  <div class="info-row"><div class="ic"><div class="ic-l">AI Level</div><div class="ic-v">Preparazione + Sintesi</div></div><div class="ic"><div class="ic-l">Approccio</div><div class="ic-v">1 attore alla volta</div></div><div class="ic"><div class="ic-l">Output chiave</div><div class="ic-v">Note strutturate</div></div></div>
+  <div class="cw"><div class="cw-l">Setup CoWork</div><div class="cw-t">Template intervista per processo. Note strutturate per sessione (attore, data, processo). Dopo ogni intervista: sintesi AI. Poi integrazione cross-interviste per visione completa.</div></div>
+  <div class="grid2">
+    <div class="blk"><div class="blk-t">Struttura intervista</div><ul><li>Obiettivo del processo (perché esiste)</li><li>Attività step-by-step (cosa, come, quando)</li><li>Sistemi e strumenti usati</li><li>Dati gestiti (input/output per attività)</li><li>Interazioni con altri ruoli/processi</li><li>Eccezioni e casi particolari</li><li>Pain point e inefficienze percepite</li></ul></div>
+    <div class="blk"><div class="blk-t">Output attesi</div><ul><li>Guida intervista per ogni processo L3</li><li>Note strutturate per ogni sessione</li><li>Mappa interazioni tra ruoli</li><li>Lista pain point per processo</li><li>Integrazione cross-interviste</li></ul></div>
+    <div class="blk"><div class="blk-t">Tecniche facilitazione</div><ul><li>Domande aperte → poi chiuse per conferma</li><li>"Raccontami l'ultima volta che..." (episodico)</li><li>Mappare su lavagna mentre si parla</li><li>Chiedere documenti/screenshot a supporto</li><li>Separare "come dovrebbe" da "come è"</li></ul></div>
+    <div class="blk"><div class="blk-t">Attenzioni</div><ul><li>Un attore alla volta — poi integrazione</li><li>Non suggerire risposte — ascoltare</li><li>Registrare anche le soluzioni proposte</li><li>Verificare le contraddizioni tra interviste</li></ul></div>
+  </div>
+  <div class="divider"></div>
+  <div class="pb"><div class="pt">Prompt — Fase 03</div><div class="filters" id="fil-s3"><button class="fbtn on" onclick="fp('s3','all',this)">Tutti</button><button class="fbtn" onclick="fp('s3','guida',this)">Guida</button><button class="fbtn" onclick="fp('s3','sintesi',this)">Sintesi</button><button class="fbtn" onclick="fp('s3','integrazione',this)">Integrazione</button></div></div>
+  <input class="psrch" placeholder="Cerca nei prompt..." oninput="sp('s3',this.value)">
+  <div class="pgrid" id="pg-s3">
+    <div class="pcard" data-tags="guida"><div class="pch"><span class="ptype b-blue">Guida</span><span class="pname">Preparazione guida intervista per processo</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un analista BPM senior esperto in conduzione di interviste.
+
+Processo da analizzare: [NOME PROCESSO L3]
+Ruolo dell'intervistato: [RUOLO]
+Macro-area: [L1]
+Contesto cliente: [SETTORE / DIMENSIONE]
+
+Prepara una guida intervista strutturata:
+
+## Obiettivi della sessione
+## Domande di apertura (warm-up)
+## Corpo intervista — step by step
+   Per ogni blocco: domanda principale + sotto-domande + prove da richiedere
+## Domande su sistemi e dati
+## Domande su pain point
+## Domande di chiusura
+
+Durata prevista: 60-90 minuti. Tono: colloquiale ma strutturato.</div><div class="pmeta"><span class="pmi">Tipo: <strong>Guida</strong></span><span class="pmi">Variabili: <strong>PROCESSO · RUOLO · SETTORE</strong></span><span class="pmi">Output: <strong>Guida intervista completa</strong></span></div></div></div>
+    <div class="pcard" data-tags="sintesi"><div class="pch"><span class="ptype b-green">Sintesi</span><span class="pname">Sintesi post-intervista strutturata</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un analista BPM. Note grezze intervista:
+
+[INCOLLA NOTE GREZZE]
+
+Processo: [PROCESSO] — Intervistato: [RUOLO] — Data: [DATA]
+
+Struttura in documento di analisi con:
+
+## Informazioni sessione
+## Descrizione processo (narrativa)
+## Attività identificate (lista ordinata)
+## Sistemi e strumenti (per attività)
+## Dati gestiti (input / output)
+## Interazioni con altri ruoli/processi
+## Eccezioni e casi particolari
+## Pain point e inefficienze (parole dell'intervistato in virgolette)
+## Open points da verificare
+## Note per modellazione BPMN
+
+Non interpretare — riportare fedelmente.</div><div class="pmeta"><span class="pmi">Tipo: <strong>Sintesi</strong></span><span class="pmi">Input: <strong>Note grezze intervista</strong></span><span class="pmi">Output: <strong>Documento strutturato</strong></span></div></div></div>
+    <div class="pcard" data-tags="integrazione"><div class="pch"><span class="ptype b-amber">Integrazione</span><span class="pname">Integrazione cross-interviste e contraddizioni</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un analista BPM senior. Hai condotto più interviste sullo stesso processo.
+
+Intervista 1 — [RUOLO A]: [SINTESI A]
+Intervista 2 — [RUOLO B]: [SINTESI B]
+Intervista 3 — [RUOLO C]: [SINTESI C]
+
+Analizza e integra:
+1. Elementi condivisi da tutti
+2. Contraddizioni: dove le versioni divergono
+3. Gap di conoscenza
+4. Visione end-to-end integrata
+5. Pain point cross (citati da più attori)
+6. Domande di follow-up per risolvere contraddizioni
+
+Tono: analitico, neutro. Non prendere parti.</div><div class="pmeta"><span class="pmi">Tipo: <strong>Integrazione</strong></span><span class="pmi">Input: <strong>2-3 sintesi interviste</strong></span><span class="pmi">Output: <strong>Visione integrata + contraddizioni</strong></span></div></div></div>
+  </div>
+  <label class="notes-l">Note operative — Fase 03</label>
+  <textarea class="notes-ta" placeholder="Interviste pianificate, referenti confermati, date sessioni..."></textarea>
+</div></div>
+
+<!-- FASE 4 -->
+<div class="page" id="page-s4"><div class="pi">
+  <div class="phase-hdr"><div><div class="badge b-amber">Fase 4 · Modeling</div><h1 class="ptitle">Modellazione<br>AS-IS</h1><p class="psub">Trasformare le interviste in flow BPMN e descrizioni end-to-end da validare con il cliente.</p></div><div class="secnum">04</div></div>
+  <div class="info-row"><div class="ic"><div class="ic-l">AI Level</div><div class="ic-v">Alta automazione</div></div><div class="ic"><div class="ic-l">Tool</div><div class="ic-v">CoWork / Copilot</div></div><div class="ic"><div class="ic-l">Output chiave</div><div class="ic-v">BPMN AS-IS validato</div></div></div>
+  <div class="cw"><div class="cw-l">Setup CoWork</div><div class="cw-t">Genera BPMN strutturato da note interviste. Formato tabellare (attività, attore, sistema, input, output, regole) come base. Validazione iterativa con cliente. Output: tabella + narrativa end-to-end.</div></div>
+  <div class="grid2">
+    <div class="blk"><div class="blk-t">Elementi BPMN</div><ul><li>Attività (task): cosa viene fatto</li><li>Attore/Corsia (swimlane): chi lo fa</li><li>Gateway: decisioni e condizioni</li><li>Eventi: start, end, intermedi</li><li>Flusso sequenza: ordine attività</li><li>Eccezioni e percorsi alternativi</li></ul></div>
+    <div class="blk"><div class="blk-t">Output attesi</div><ul><li>Tabella BPMN strutturata per processo</li><li>Descrizione end-to-end narrativa</li><li>Mappa sistemi per attività</li><li>Lista eccezioni e percorsi alternativi</li><li>Documento validazione cliente</li></ul></div>
+  </div>
+  <div class="divider"></div>
+  <div class="pb"><div class="pt">Prompt — Fase 04</div><div class="filters" id="fil-s4"><button class="fbtn on" onclick="fp('s4','all',this)">Tutti</button><button class="fbtn" onclick="fp('s4','bpmn',this)">BPMN</button><button class="fbtn" onclick="fp('s4','narrativa',this)">Narrativa</button></div></div>
+  <input class="psrch" placeholder="Cerca nei prompt..." oninput="sp('s4',this.value)">
+  <div class="pgrid" id="pg-s4">
+    <div class="pcard" data-tags="bpmn"><div class="pch"><span class="ptype b-amber">BPMN</span><span class="pname">Strutturazione BPMN AS-IS da interviste</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un esperto BPMN e analista di processo.
+
+Processo: [NOME PROCESSO]
+Note interviste integrate: [INCOLLA]
+
+Struttura il processo AS-IS in formato tabellare:
+| # | Attività | Attore (corsia) | Sistema | Input | Output | Regola/Condizione | Eccezione |
+
+Poi descrivi:
+- Evento di start: cosa innesca il processo
+- Evento di end: quando si considera concluso
+- Gateway principali con condizioni
+- Percorsi alternativi
+- Sistemi coinvolti con funzione
+
+Regole:
+- Verbi all'infinito per le attività (es. "Verificare fattura")
+- Nome ruolo, non della persona
+- [N/A] se non applicabile — [?] per dati da verificare</div><div class="pmeta"><span class="pmi">Tipo: <strong>BPMN</strong></span><span class="pmi">Input: <strong>Note interviste integrate</strong></span><span class="pmi">Output: <strong>Tabella BPMN strutturata</strong></span></div></div></div>
+    <div class="pcard" data-tags="narrativa"><div class="pch"><span class="ptype b-blue">Narrativa</span><span class="pname">Descrizione narrativa end-to-end AS-IS</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un business analyst esperto in comunicazione con i clienti.
+
+Tabella BPMN: [INCOLLA]
+
+Scrivi una descrizione narrativa del processo AS-IS in linguaggio accessibile (non tecnico BPM):
+- Inizia con "Il processo [NOME] inizia quando..."
+- Segui il flusso cronologico
+- Cita i ruoli in primo piano, i sistemi solo dove rilevante
+- Evidenzia i punti decisionali con "In questo momento..."
+- Concludi con "Il processo si conclude quando..."
+- Max 600 parole (3-5 minuti di lettura)
+
+Aggiungi: "Punti di attenzione AS-IS" con i 3-5 elementi critici.</div><div class="pmeta"><span class="pmi">Tipo: <strong>Narrativa</strong></span><span class="pmi">Input: <strong>Tabella BPMN AS-IS</strong></span><span class="pmi">Output: <strong>Narrativa + criticità</strong></span></div></div></div>
+  </div>
+  <label class="notes-l">Note operative — Fase 04</label>
+  <textarea class="notes-ta" placeholder="Processi modellati, validazioni in corso, revisioni cliente..."></textarea>
+</div></div>
+
+<!-- FASE 5 -->
+<div class="page" id="page-s5"><div class="pi">
+  <div class="phase-hdr"><div><div class="badge b-amber">Fase 5 · Quantitative</div><h1 class="ptitle">Analisi FTE</h1><p class="psub">Dimensionare l'effort per ogni attività: tempo × frequenza × driver di volume, con attenzione ai picchi stagionali.</p></div><div class="secnum">05</div></div>
+  <div class="info-row"><div class="ic"><div class="ic-l">AI Level</div><div class="ic-v">Alta automazione</div></div><div class="ic"><div class="ic-l">Formula</div><div class="ic-v">Tempo × Freq × Driver</div></div><div class="ic"><div class="ic-l">Output chiave</div><div class="ic-v">Tabella FTE + effort</div></div></div>
+  <div class="cw"><div class="cw-l">Setup CoWork</div><div class="cw-t">Template FTE per processo. Calcolo automatico effort (min → ore → FTE eq.). Alert su picchi stagionali. Aggregazione effort per ruolo e processo.</div></div>
+  <div class="grid2">
+    <div class="blk"><div class="blk-t">Dati da raccogliere</div><ul><li>Tempo medio esecuzione (minuti)</li><li>Frequenza (giornaliera / settimanale / mensile)</li><li>Driver di volume (es. n. fatture)</li><li>Volume medio per periodo</li><li>Picchi stagionali (mesi, periodi)</li><li>% del tempo del ruolo dedicata</li></ul></div>
+    <div class="blk"><div class="blk-t">Output attesi</div><ul><li>Tabella FTE per attività</li><li>Effort totale per processo (ore/anno)</li><li>FTE equivalenti per ruolo</li><li>Mappa picchi di attività</li><li>Confronto effort vs organico attuale</li></ul></div>
+  </div>
+  <div class="divider"></div>
+  <div class="pb"><div class="pt">Prompt — Fase 05</div><div class="filters" id="fil-s5"><button class="fbtn on" onclick="fp('s5','all',this)">Tutti</button><button class="fbtn" onclick="fp('s5','calcolo',this)">Calcolo</button><button class="fbtn" onclick="fp('s5','picchi',this)">Picchi</button></div></div>
+  <input class="psrch" placeholder="Cerca nei prompt..." oninput="sp('s5',this.value)">
+  <div class="pgrid" id="pg-s5">
+    <div class="pcard" data-tags="calcolo"><div class="pch"><span class="ptype b-amber">Calcolo</span><span class="pname">Analisi FTE completa per processo</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un analista organizzativo esperto in dimensionamento risorse.
+
+Processo: [NOME PROCESSO]
+Attività da BPMN AS-IS: [LISTA]
+Giorni lavorativi/anno: 220 — Ore/giorno: 8 — FTE/anno: 1.760 ore
+
+Per ogni attività:
+| Attività | Ruolo | Tempo (min) | Frequenza | Volume/periodo | Ore/anno | FTE eq. | Picchi | Note |
+
+Calcoli:
+- Ore/anno = (min/60) × Frequenza annualizzata × Volume
+- FTE eq. = Ore/anno / 1.760
+- Picchi: mesi dove volume > 150% della media
+
+Sommario:
+- FTE totale per ruolo
+- Effort totale processo
+- Top 3 attività per effort</div><div class="pmeta"><span class="pmi">Tipo: <strong>Calcolo</strong></span><span class="pmi">Variabili: <strong>PROCESSO · ATTIVITÀ · VOLUMI</strong></span><span class="pmi">Output: <strong>Tabella FTE + sommario</strong></span></div></div></div>
+    <div class="pcard" data-tags="picchi"><div class="pch"><span class="ptype b-red">Picchi</span><span class="pname">Analisi picchi e concentrazioni temporali</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un analista organizzativo. Tabella FTE con picchi: [INCOLLA]
+
+Analizza:
+1. Calendario dei picchi mese per mese
+2. Sovrapposizioni critiche (picchi simultanei su più attività)
+3. Rischio risorse: FTE richiesto nei picchi vs disponibile
+4. Impatto su processi dipendenti
+5. Raccomandazioni per distribuire il carico
+
+Formato: tabella calendario + analisi narrativa + raccomandazioni prioritizzate.</div><div class="pmeta"><span class="pmi">Tipo: <strong>Picchi</strong></span><span class="pmi">Input: <strong>Tabella FTE con picchi</strong></span><span class="pmi">Output: <strong>Calendario picchi + raccomandazioni</strong></span></div></div></div>
+  </div>
+  <label class="notes-l">Note operative — Fase 05</label>
+  <textarea class="notes-ta" placeholder="Volumi comunicati dal cliente, stagionalità identificata..."></textarea>
+</div></div>
+
+<!-- FASE 6 -->
+<div class="page" id="page-s6"><div class="pi">
+  <div class="phase-hdr"><div><div class="badge b-blue">Fase 6 · Data</div><h1 class="ptitle">Analisi dati</h1><p class="psub">Identificare master data e transazionali, collegarli ad attività e sistemi, costruire il modello dati base.</p></div><div class="secnum">06</div></div>
+  <div class="info-row"><div class="ic"><div class="ic-l">AI Level</div><div class="ic-v">Supporto</div></div><div class="ic"><div class="ic-l">Output chiave</div><div class="ic-v">Matrice dati + glossario</div></div><div class="ic"><div class="ic-l">Focus</div><div class="ic-v">Dato ↔ Attività ↔ Sistema</div></div></div>
+  <div class="cw"><div class="cw-l">Setup CoWork</div><div class="cw-t">Modello dati base per cliente. Matrice dati per sistema. KB: glossario dati cliente (costruito iterativamente). Verifica qualità dato per attività critica.</div></div>
+  <div class="grid2">
+    <div class="blk"><div class="blk-t">Tipologie di dati</div><ul><li><strong>Master data:</strong> entità persistenti</li><li><strong>Transazionali:</strong> eventi (fatture, ordini)</li><li><strong>Riferimento:</strong> tabelle di codifica</li><li><strong>Analitici:</strong> aggregazioni e report</li></ul></div>
+    <div class="blk"><div class="blk-t">Output attesi</div><ul><li>Matrice: dato | tipo | sistema | qualità</li><li>Glossario dati cliente</li><li>Modello dati base</li><li>Gap qualità dati per processo</li><li>Mappa sistemi sorgente</li></ul></div>
+  </div>
+  <div class="divider"></div>
+  <div class="pb"><div class="pt">Prompt — Fase 06</div><div class="filters" id="fil-s6"><button class="fbtn on" onclick="fp('s6','all',this)">Tutti</button><button class="fbtn" onclick="fp('s6','matrice',this)">Matrice</button><button class="fbtn" onclick="fp('s6','glossario',this)">Glossario</button></div></div>
+  <input class="psrch" placeholder="Cerca nei prompt..." oninput="sp('s6',this.value)">
+  <div class="pgrid" id="pg-s6">
+    <div class="pcard" data-tags="matrice"><div class="pch"><span class="ptype b-blue">Matrice</span><span class="pname">Costruzione matrice dati processo</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un data architect esperto in analisi di processo.
+
+Processo AS-IS: [NOME] — BPMN: [INCOLLA] — Sistemi: [LISTA]
+
+Matrice dati:
+| Dato | Tipo | Attività che lo usa | Sistema sorgente | Destinazione | Formato | Qualità (A/M/B/?) | Note |
+
+Identifica:
+- Dati critici: senza cui il processo si blocca
+- Dati duplicati: stessa info in sistemi diversi
+- Dati mancanti: input non sempre disponibili
+- Dati di bassa qualità: errori frequenti, formati non standard
+
+Per dati critici di bassa qualità: azione correttiva minima suggerita.</div><div class="pmeta"><span class="pmi">Tipo: <strong>Matrice</strong></span><span class="pmi">Input: <strong>BPMN + sistemi</strong></span><span class="pmi">Output: <strong>Matrice dati completa</strong></span></div></div></div>
+    <div class="pcard" data-tags="glossario"><div class="pch"><span class="ptype b-green">Glossario</span><span class="pname">Costruzione glossario dati cliente</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un data steward. Stai costruendo il glossario dati per il cliente.
+
+Dati identificati: [LISTA DA MATRICI]
+Terminologia interviste: [TERMINI USATI DAL CLIENTE]
+
+Glossario in formato tabella:
+| Termine | Definizione | Tipo | Sistema sorgente | Sinonimi interni | Note |
+
+Regole:
+- Usa la terminologia del cliente, non tecnica
+- Riporta tutti i nomi usati internamente per lo stesso concetto
+- [CONFLITTO] dove lo stesso termine ha significati diversi
+- Ordine alfabetico
+
+Questo glossario va nella KB cliente in CoWork.</div><div class="pmeta"><span class="pmi">Tipo: <strong>Glossario</strong></span><span class="pmi">Input: <strong>Matrici dati + terminologia interviste</strong></span><span class="pmi">Output: <strong>Glossario dati cliente</strong></span></div></div></div>
+  </div>
+  <label class="notes-l">Note operative — Fase 06</label>
+  <textarea class="notes-ta" placeholder="Sistemi IT identificati, qualità dati osservata, gap critici..."></textarea>
+</div></div>
+
+<!-- FASE 7 -->
+<div class="page" id="page-s7"><div class="pi">
+  <div class="phase-hdr"><div><div class="badge b-green">Fase 7 · AI</div><h1 class="ptitle">AI Readiness<br>&amp; Automazione</h1><p class="psub">Classificare ogni attività su 3 livelli di automazione e identificare use case AI con ROI potenziale.</p></div><div class="secnum">07</div></div>
+  <div class="info-row"><div class="ic"><div class="ic-l">AI Level</div><div class="ic-v">Valutazione strategica</div></div><div class="ic"><div class="ic-l">3 livelli</div><div class="ic-v">No / Supporto / Auto</div></div><div class="ic"><div class="ic-l">Output chiave</div><div class="ic-v">Use case + roadmap AI</div></div></div>
+  <div class="cw"><div class="cw-l">Setup CoWork</div><div class="cw-t">Matrice AI readiness per processo. Use case generator. Logica agenti CoWork/Copilot per use case prioritari. Prioritizzazione per impatto × fattibilità.</div></div>
+  <div class="grid2">
+    <div class="blk"><div class="blk-t">I 3 livelli di automazione</div><ul><li><strong>L1 — Non automatizzabile:</strong> dipende da giudizio umano, relazione, contesto non strutturato</li><li><strong>L2 — Supportabile:</strong> AI come assistente (suggerisce, verifica, riassume)</li><li><strong>L3 — Automatizzabile:</strong> workflow autonomo, agente AI, RPA</li></ul></div>
+    <div class="blk"><div class="blk-t">Output attesi</div><ul><li>Matrice AI readiness per attività</li><li>Lista use case prioritizzati</li><li>Stima ROI per use case</li><li>Logica agenti CoWork/Copilot</li><li>Roadmap AI con quick win</li></ul></div>
+  </div>
+  <div class="divider"></div>
+  <div class="pb"><div class="pt">Prompt — Fase 07</div><div class="filters" id="fil-s7"><button class="fbtn on" onclick="fp('s7','all',this)">Tutti</button><button class="fbtn" onclick="fp('s7','readiness',this)">Readiness</button><button class="fbtn" onclick="fp('s7','usecase',this)">Use case</button><button class="fbtn" onclick="fp('s7','roadmap',this)">Roadmap</button></div></div>
+  <input class="psrch" placeholder="Cerca nei prompt..." oninput="sp('s7',this.value)">
+  <div class="pgrid" id="pg-s7">
+    <div class="pcard" data-tags="readiness"><div class="pch"><span class="ptype b-green">Readiness</span><span class="pname">Valutazione AI readiness per processo</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un AI strategist esperto in automazione di processi.
+
+Processo: [NOME] — Attività: [LISTA] — FTE: [DATI] — Dati disponibili: [TIPOLOGIE]
+
+Per ogni attività valuta il livello:
+- L1 Non automatizzabile: motiva
+- L2 Supportabile con AI: descrivi come
+- L3 Automatizzabile: descrivi il workflow autonomo
+
+Matrice:
+| Attività | FTE attuale | Livello | Tecnologia | Rischio | FTE liberabile | Priorità (A/M/B) |
+
+Priorità:
+- Alta: FTE liberabile alto + rischio basso
+- Media: buon bilanciamento
+- Bassa: FTE basso o rischio alto</div><div class="pmeta"><span class="pmi">Tipo: <strong>Readiness</strong></span><span class="pmi">Input: <strong>BPMN + FTE + dati</strong></span><span class="pmi">Output: <strong>Matrice AI readiness</strong></span></div></div></div>
+    <div class="pcard" data-tags="usecase"><div class="pch"><span class="ptype b-green">Use case</span><span class="pname">Scheda use case AI dettagliata</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un AI product manager.
+
+Use case: [NOME] — Attività target: [ATTIVITÀ] — Processo: [PROCESSO] — FTE attuale: [DATI]
+
+Compila:
+## Nome use case
+## Descrizione in una frase (per non tecnici)
+## Problema che risolve
+## Come funziona (logica AI)
+## Input necessari
+## Output generato
+## Tecnologia suggerita (LLM / RPA / ML / regole)
+## Supervisione umana richiesta
+## FTE liberabile stimato
+## Rischi e mitigazioni
+## Prerequisiti
+## Effort implementazione (T-shirt: XS/S/M/L/XL)
+## KPI di successo
+
+Tono: concreto, accessibile, business-oriented.</div><div class="pmeta"><span class="pmi">Tipo: <strong>Use case</strong></span><span class="pmi">Variabili: <strong>USE CASE · ATTIVITÀ · FTE</strong></span><span class="pmi">Output: <strong>Scheda use case completa</strong></span></div></div></div>
+    <div class="pcard" data-tags="roadmap"><div class="pch"><span class="ptype b-amber">Roadmap</span><span class="pname">Roadmap AI su 3 orizzonti temporali</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un AI transformation advisor.
+
+Matrice AI readiness: [INCOLLA]
+Use case: [LISTA CON PRIORITÀ E EFFORT]
+Vincoli cliente: [BUDGET / TEMPO / SKILL]
+
+Roadmap AI su 3 orizzonti:
+
+Orizzonte 1 — Quick win (0-3 mesi)
+Implementabili subito, basso sforzo, impatto visibile
+
+Orizzonte 2 — Medio termine (3-12 mesi)
+Valore alto, sforzo medio, richiedono prerequisiti
+
+Orizzonte 3 — Trasformativo (12-24 mesi)
+Alto impatto, richiedono cambiamenti strutturali
+
+Per ogni orizzonte: use case | responsabile | dipendenze | KPI | FTE liberabile
+
+Formato: tabella + narrativa 2-3 righe per orizzonte. Tono: decision maker, business-focused.</div><div class="pmeta"><span class="pmi">Tipo: <strong>Roadmap</strong></span><span class="pmi">Input: <strong>Matrice + use case + vincoli</strong></span><span class="pmi">Output: <strong>Roadmap AI 3 orizzonti</strong></span></div></div></div>
+  </div>
+  <label class="notes-l">Note operative — Fase 07</label>
+  <textarea class="notes-ta" placeholder="Vincoli tecnologici cliente, budget disponibile, skill interne..."></textarea>
+</div></div>
+
+<!-- FASE 8 -->
+<div class="page" id="page-s8"><div class="pi">
+  <div class="phase-hdr"><div><div class="badge b-amber">Fase 8 · Design</div><h1 class="ptitle">Redesign<br>TO-BE</h1><p class="psub">Riprogettare i processi con logiche BPR: parallelizzazione, riduzione passaggi, spostamento decisioni, AI integrata.</p></div><div class="secnum">08</div></div>
+  <div class="info-row"><div class="ic"><div class="ic-l">AI Level</div><div class="ic-v">Co-design</div></div><div class="ic"><div class="ic-l">Logica</div><div class="ic-v">BPR + AI integration</div></div><div class="ic"><div class="ic-l">Output chiave</div><div class="ic-v">BPMN TO-BE + delta FTE</div></div></div>
+  <div class="cw"><div class="cw-l">Setup CoWork</div><div class="cw-t">Confronto AS-IS vs TO-BE per processo. Generazione BPMN TO-BE. Calcolo delta FTE e benefici attesi. Documento di change per ogni processo ridisegnato.</div></div>
+  <div class="grid2">
+    <div class="blk"><div class="blk-t">Principi BPR</div><ul><li>Eliminare attività senza valore aggiunto</li><li>Parallelizzare dove il sequenziale è inutile</li><li>Ridurre i passaggi di mano (handoff)</li><li>Spostare decisioni al punto di maggior informazione</li><li>Integrare sistemi per eliminare ri-inserimenti</li><li>Standardizzare dove possibile</li></ul></div>
+    <div class="blk"><div class="blk-t">Output attesi</div><ul><li>BPMN TO-BE per processo</li><li>Confronto AS-IS → TO-BE tabellare</li><li>Delta FTE atteso</li><li>Roadmap implementazione TO-BE</li><li>Impatti su sistemi e ruoli</li></ul></div>
+  </div>
+  <div class="divider"></div>
+  <div class="pb"><div class="pt">Prompt — Fase 08</div><div class="filters" id="fil-s8"><button class="fbtn on" onclick="fp('s8','all',this)">Tutti</button><button class="fbtn" onclick="fp('s8','tobe',this)">TO-BE</button><button class="fbtn" onclick="fp('s8','confronto',this)">Confronto</button></div></div>
+  <input class="psrch" placeholder="Cerca nei prompt..." oninput="sp('s8',this.value)">
+  <div class="pgrid" id="pg-s8">
+    <div class="pcard" data-tags="tobe"><div class="pch"><span class="ptype b-amber">TO-BE</span><span class="pname">Redesign processo TO-BE con AI</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un esperto BPR e AI transformation advisor.
+
+BPMN AS-IS: [INCOLLA] — Pain point: [LISTA] — Use case AI: [LISTA] — Vincoli: [COSA NON PUÒ CAMBIARE]
+
+Ridisegna il TO-BE applicando:
+1. Eliminazione attività senza valore (motiva)
+2. Parallelizzazione dove il sequenziale è inutile
+3. Riduzione handoff tra ruoli
+4. Integrazione use case AI
+5. Standardizzazione step ripetitivi
+
+Output:
+- Tabella BPMN TO-BE (stesso formato AS-IS)
+- Per ogni attività: stato (Mantenuta/Modificata/Eliminata/Automatizzata/Nuova)
+- Narrative di cambio per attività modificate
+
+Sii conservativo: solo cambiamenti realizzabili nel contesto del cliente.</div><div class="pmeta"><span class="pmi">Tipo: <strong>TO-BE</strong></span><span class="pmi">Input: <strong>BPMN AS-IS + pain point + use case AI</strong></span><span class="pmi">Output: <strong>BPMN TO-BE strutturato</strong></span></div></div></div>
+    <div class="pcard" data-tags="confronto"><div class="pch"><span class="ptype b-blue">Confronto</span><span class="pname">Analisi delta AS-IS → TO-BE</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un business transformation analyst.
+
+BPMN AS-IS + FTE: [INCOLLA] — BPMN TO-BE: [INCOLLA]
+
+Analisi delta:
+| Indicatore           | AS-IS | TO-BE | Delta | % |
+|----------------------|-------|-------|-------|---|
+| N. attività totali   |       |       |       |   |
+| N. handoff           |       |       |       |   |
+| N. sistemi coinvolti |       |       |       |   |
+| FTE equivalente      |       |       |       |   |
+| Tempo ciclo stimato  |       |       |       |   |
+
+Poi:
+- Benefici principali (top 5)
+- Rischi di transizione
+- Impatti su ruoli e sistemi
+- Prerequisiti per il TO-BE
+
+Tono: executive, orientato ai risultati misurabili.</div><div class="pmeta"><span class="pmi">Tipo: <strong>Confronto</strong></span><span class="pmi">Input: <strong>BPMN AS-IS + TO-BE + FTE</strong></span><span class="pmi">Output: <strong>Delta analysis + benefici</strong></span></div></div></div>
+  </div>
+  <label class="notes-l">Note operative — Fase 08</label>
+  <textarea class="notes-ta" placeholder="Vincoli organizzativi, resistenze al cambiamento, decisioni di design..."></textarea>
+</div></div>
+
+<!-- FASE 9 -->
+<div class="page" id="page-s9"><div class="pi">
+  <div class="phase-hdr"><div><div class="badge b-blue">Fase 9 · Metrics</div><h1 class="ptitle">Metriche<br>&amp; KPI</h1><p class="psub">Definire KPI misurabili per ogni processo: tempo ciclo, FTE, compliance, AI readiness, valore aggiunto.</p></div><div class="secnum">09</div></div>
+  <div class="info-row"><div class="ic"><div class="ic-l">AI Level</div><div class="ic-v">Supporto</div></div><div class="ic"><div class="ic-l">Output chiave</div><div class="ic-v">Scorecard KPI</div></div><div class="ic"><div class="ic-l">Focus</div><div class="ic-v">Baseline → Target</div></div></div>
+  <div class="cw"><div class="cw-l">Setup CoWork</div><div class="cw-t">Dashboard KPI per cliente. Baseline AS-IS vs target TO-BE. Template scorecard per processo. Metodo di rilevazione per ogni KPI.</div></div>
+  <div class="divider"></div>
+  <div class="pb"><div class="pt">Prompt — Fase 09</div><div class="filters" id="fil-s9"><button class="fbtn on" onclick="fp('s9','all',this)">Tutti</button><button class="fbtn" onclick="fp('s9','kpi',this)">KPI</button><button class="fbtn" onclick="fp('s9','scorecard',this)">Scorecard</button></div></div>
+  <input class="psrch" placeholder="Cerca nei prompt..." oninput="sp('s9',this.value)">
+  <div class="pgrid" id="pg-s9">
+    <div class="pcard" data-tags="kpi"><div class="pch"><span class="ptype b-blue">KPI</span><span class="pname">Definizione KPI per processo</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un performance management expert.
+
+Processo: [NOME] — BPMN AS-IS: [INCOLLA] — BPMN TO-BE: [INCOLLA] — FTE AS-IS: [DATI]
+
+KPI nelle 5 dimensioni:
+1. Tempo ciclo: dal trigger all'output finale
+2. Efficienza risorse (FTE): ore per unità di output
+3. Qualità/Compliance: errori, eccezioni, SLA
+4. AI Readiness score: % attività automatizzate/supportate
+5. Valore aggiunto: % tempo su attività VA vs non-VA
+
+Per ogni KPI:
+| KPI | Formula | Baseline AS-IS | Target TO-BE | Fonte dati | Frequenza | Owner |
+
+Aggiungi 2-3 KPI leading indicator (predittivi).</div><div class="pmeta"><span class="pmi">Tipo: <strong>KPI</strong></span><span class="pmi">Input: <strong>BPMN AS-IS + TO-BE + FTE</strong></span><span class="pmi">Output: <strong>Tabella KPI completa</strong></span></div></div></div>
+    <div class="pcard" data-tags="scorecard"><div class="pch"><span class="ptype b-green">Scorecard</span><span class="pname">Scorecard executive per cliente</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un management consultant. Presenti la scorecard al top management.
+
+KPI per processo: [INCOLLA TABELLE KPI] — Processi: [LISTA]
+
+Scorecard executive consolidata (semaforo per dimensione):
+| Processo | Tempo ciclo | FTE | Qualità | AI Readiness | VA% | Score |
+
+Aggiungi:
+- Top 3 quick win (impatto immediato)
+- Top 3 priorità strategiche (12 mesi)
+- Beneficio totale stimato (FTE liberabile, ore/anno)
+- Raccomandazione principale in 2 righe
+
+Tono: executive, conciso. Zero gergo tecnico.</div><div class="pmeta"><span class="pmi">Tipo: <strong>Scorecard</strong></span><span class="pmi">Input: <strong>Tabelle KPI tutti i processi</strong></span><span class="pmi">Output: <strong>Scorecard executive</strong></span></div></div></div>
+  </div>
+  <label class="notes-l">Note operative — Fase 09</label>
+  <textarea class="notes-ta" placeholder="Fonti dati disponibili, owner confermati, cadenza reporting..."></textarea>
+</div></div>
+
+<!-- FASE 10 -->
+<div class="page" id="page-s10"><div class="pi">
+  <div class="phase-hdr"><div><div class="badge b-green">Fase 10 · Delivery</div><h1 class="ptitle">Output<br>finale</h1><p class="psub">Consolidare tutti gli output in deliverable strutturati: executive summary, mappe, roadmap e next steps per il cliente.</p></div><div class="secnum">10</div></div>
+  <div class="info-row"><div class="ic"><div class="ic-l">AI Level</div><div class="ic-v">Sintesi finale</div></div><div class="ic"><div class="ic-l">Output chiave</div><div class="ic-v">Executive summary</div></div><div class="ic"><div class="ic-l">Audience</div><div class="ic-v">Top management cliente</div></div></div>
+  <div class="cw"><div class="cw-l">Setup CoWork</div><div class="cw-t">Assembly finale di tutti i documenti. Report cliente (executive + tecnico). Roadmap AI completa. Presentazione executive. Archivio KB cliente per futuri progetti.</div></div>
+  <div class="grid2">
+    <div class="blk"><div class="blk-t">6 deliverable finali</div><ul><li>Mappa processi AS-IS (per processo)</li><li>Mappa processi TO-BE (per processo)</li><li>Matrice compliance (aggiornata)</li><li>Analisi FTE (AS-IS e target TO-BE)</li><li>Modello dati e glossario</li><li>Roadmap AI e automazione</li></ul></div>
+    <div class="blk"><div class="blk-t">Executive summary struttura</div><ul><li>Contesto e obiettivi progetto</li><li>Metodologia adottata (3 righe)</li><li>Findings principali AS-IS (con dato)</li><li>Opportunità TO-BE prioritizzate</li><li>Roadmap AI con impatto atteso</li><li>Next steps e piano d'azione</li></ul></div>
+  </div>
+  <div class="divider"></div>
+  <div class="pb"><div class="pt">Prompt — Fase 10</div><div class="filters" id="fil-s10"><button class="fbtn on" onclick="fp('s10','all',this)">Tutti</button><button class="fbtn" onclick="fp('s10','executive',this)">Executive</button><button class="fbtn" onclick="fp('s10','assembly',this)">Assembly</button></div></div>
+  <input class="psrch" placeholder="Cerca nei prompt..." oninput="sp('s10',this.value)">
+  <div class="pgrid" id="pg-s10">
+    <div class="pcard" data-tags="executive"><div class="pch"><span class="ptype b-green">Executive</span><span class="pname">Executive summary per top management</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un senior consultant. Executive summary finale del progetto BPM.
+
+Cliente: [NOME] — Perimetro: [PROCESSI] — Periodo: [DATE]
+
+Input: Scorecard KPI [INCOLLA] + Finding AS-IS [INCOLLA] + TO-BE [INCOLLA] + Roadmap AI [INCOLLA]
+
+Executive summary max 2 pagine:
+
+## Sintesi esecutiva (5 righe max)
+## Contesto e perimetro
+## Metodologia (3 righe)
+## Finding AS-IS (top 5, con dato quantitativo: FTE, ore, %, €)
+## Opportunità TO-BE (top 5, con beneficio atteso)
+## Roadmap AI — priorità e impatto
+## Next steps (azioni concrete con responsabile)
+
+Tono: autorevole, zero gergo tecnico. Ogni finding con dato numerico.</div><div class="pmeta"><span class="pmi">Tipo: <strong>Executive</strong></span><span class="pmi">Input: <strong>Tutti gli output precedenti</strong></span><span class="pmi">Output: <strong>Executive summary 2 pagine</strong></span></div></div></div>
+    <div class="pcard" data-tags="assembly"><div class="pch"><span class="ptype b-green">Assembly</span><span class="pname">Indice deliverable e checklist QA finale</span><button class="cpbtn" onclick="cp(this)">⎘ Copia</button></div><div class="pbody"><div class="ptext">Sei un project manager in fase di chiusura progetto BPM.
+
+Processi analizzati: [LISTA] — Fasi completate: [LISTA] — Output prodotti: [FILE/DOCUMENTI]
+
+Costruisci:
+
+1. Indice deliverable (tabella):
+| Documento | Contenuto | Stato (✓/bozza/mancante) | File | Note |
+
+2. Checklist QA:
+- Completezza: tutti i processi coperti?
+- Coerenza: dati allineati tra documenti?
+- Formato: template standard rispettato?
+- Approvazioni cliente mancanti?
+
+3. Archivio KB cliente per CoWork:
+- Cosa salvare per riuso futuro
+- Come taggare i documenti
+- Aggiornamenti futuri raccomandati
+
+Formato: checklist operativa con checkbox [ ].</div><div class="pmeta"><span class="pmi">Tipo: <strong>Assembly</strong></span><span class="pmi">Input: <strong>Lista output prodotti</strong></span><span class="pmi">Output: <strong>Indice + checklist QA</strong></span></div></div></div>
+  </div>
+  <label class="notes-l">Note operative — Fase 10</label>
+  <textarea class="notes-ta" placeholder="Deliverable mancanti, approvazioni in attesa, data consegna..."></textarea>
+</div></div>
+
+</div><!-- /pages -->
+
+<div class="auth-gate" id="authGate">
+  <div class="auth-card">
+    <div class="auth-title">Accesso area riservata</div>
+    <div class="auth-sub">Inserisci la chiave di ingresso. La validazione avviene via API server-side.</div>
+    <input id="accessKeyInput" class="auth-inp" type="password" placeholder="Chiave di accesso">
+    <div class="auth-row">
+      <button id="accessKeyBtn" class="auth-btn" type="button">Entra</button>
+    </div>
+    <div id="authMsg" class="auth-msg"></div>
+  </div>
+</div>
+
+<div class="prompt-modal" id="promptModal">
+  <div class="prompt-card">
+    <div class="pm-head">
+      <div class="pm-title">Nuovo Prompt</div>
+      <button class="pm-close" type="button" id="pmClose">×</button>
+    </div>
+    <div class="pm-grid">
+      <div>
+        <label class="pm-lbl" for="pmSection">Sezione</label>
+        <select id="pmSection" class="pm-sel">
+          <option value="s1">Fase 01</option><option value="s2">Fase 02</option><option value="s3">Fase 03</option><option value="s4">Fase 04</option><option value="s5">Fase 05</option><option value="s6">Fase 06</option><option value="s7">Fase 07</option><option value="s8">Fase 08</option><option value="s9">Fase 09</option><option value="s10">Fase 10</option>
+        </select>
+      </div>
+      <div>
+        <label class="pm-lbl" for="pmCategory">Categoria</label>
+        <input id="pmCategory" class="pm-inp" placeholder="es. mappa, kpi, roadmap">
+      </div>
+      <div class="full">
+        <label class="pm-lbl" for="pmTitle">Titolo</label>
+        <input id="pmTitle" class="pm-inp" placeholder="Titolo prompt">
+      </div>
+      <div class="full">
+        <label class="pm-lbl" for="pmContent">Testo prompt</label>
+        <textarea id="pmContent" class="pm-ta" placeholder="Scrivi qui il prompt..."></textarea>
+      </div>
+      <div>
+        <label class="pm-lbl" for="pmVariables">Variabili</label>
+        <input id="pmVariables" class="pm-inp" placeholder="CLIENTE · SETTORE · PROCESSO">
+      </div>
+      <div>
+        <label class="pm-lbl" for="pmOutput">Output atteso</label>
+        <input id="pmOutput" class="pm-inp" placeholder="Tabella / checklist / narrativa">
+      </div>
+      <div class="full">
+        <label class="pm-lbl" for="pmTags">Tag (separati da virgola)</label>
+        <input id="pmTags" class="pm-inp" placeholder="mappa, intervista, analisi">
+      </div>
+    </div>
+    <div class="pm-foot">
+      <button id="pmCancel" class="btn-ghost" type="button">Annulla</button>
+      <button id="pmSave" class="auth-btn" type="button">Salva prompt</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Prompt copiato</div>
+
+<script>
+const API_BASE = 'http://localhost:8787';
+let authToken = localStorage.getItem('bpm_token') || '';
+
+function toggleNav(){const s=document.getElementById('sb'),o=document.getElementById('ovl'),h=document.getElementById('hamBtn'),op=s.classList.toggle('open');o.classList.toggle('show',op);h.classList.toggle('open',op);}
+function closeNav(){document.getElementById('sb').classList.remove('open');document.getElementById('ovl').classList.remove('show');document.getElementById('hamBtn').classList.remove('open');}
+function go(id,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');closeNav();}
+function goById(id){const el=document.querySelector(`.nav-item[onclick*="'${id}'"]`);go(id,el);}
+let openP=null;
+function togglePanel(k){const p=document.getElementById('panel-'+k),n=document.getElementById('mn-'+k);if(openP&&openP!==k){document.getElementById('panel-'+openP).classList.remove('show');document.getElementById('mn-'+openP).classList.remove('mact');}const isOpen=p.classList.contains('show');p.classList.toggle('show',!isOpen);n.classList.toggle('mact',!isOpen);openP=isOpen?null:k;}
+function cp(btn){const t=btn.closest('.pcard').querySelector('.ptext').textContent.trim();navigator.clipboard.writeText(t).then(()=>{btn.classList.add('copied');btn.textContent='✓ Copiato';const toast=document.getElementById('toast');toast.classList.add('show');setTimeout(()=>{toast.classList.remove('show');btn.classList.remove('copied');btn.textContent='⎘ Copia';},2000);});}
+function fp(s,tag,btn){document.querySelectorAll(`#fil-${s} .fbtn`).forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.querySelectorAll(`#pg-${s} .pcard`).forEach(c=>{c.classList.toggle('hidden',tag!=='all'&&!(c.dataset.tags||'').includes(tag));});}
+function sp(s,val){const q=val.toLowerCase().trim();document.querySelectorAll(`#fil-${s} .fbtn`).forEach((b,i)=>b.classList.toggle('on',i===0));document.querySelectorAll(`#pg-${s} .pcard`).forEach(c=>{c.classList.toggle('hidden',q.length>0&&!c.textContent.toLowerCase().includes(q));});}
+
+function authHeaders() {
+  return { Authorization: `Bearer ${authToken}` };
+}
+
+function showAuthError(message) {
+  document.getElementById('authMsg').textContent = message || '';
+}
+
+function sanitizeSection(section) {
+  return /^s(10|[1-9])$/.test(section) ? section : 's1';
+}
+
+function esc(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function badgeClassFromCategory(category) {
+  const c = (category || '').toLowerCase();
+  if (['mappa', 'guida', 'narrativa', 'kpi'].includes(c)) return 'b-blue';
+  if (['raci', 'verifica', 'roadmap', 'bpmn', 'tobe', 'calcolo'].includes(c)) return 'b-amber';
+  if (['kb', 'sintesi', 'usecase', 'scorecard', 'executive', 'assembly', 'readiness'].includes(c)) return 'b-green';
+  if (['gap', 'picchi', 'matrice'].includes(c)) return 'b-red';
+  return 'b-blue';
+}
+
+function promptCardTemplate(prompt) {
+  const typeClass = badgeClassFromCategory(prompt.category);
+  const safeType = esc((prompt.category || 'Prompt').toUpperCase());
+  const safeTitle = esc(prompt.title || 'Nuovo prompt');
+  const safeContent = esc(prompt.content || '');
+  const safeVars = esc(prompt.variables || '-');
+  const safeOutput = esc(prompt.output || '-');
+  const tags = Array.isArray(prompt.tags) ? esc(prompt.tags.join(' · ').toUpperCase()) : '';
+  return `
+    <div class="pcard" data-tags="${esc((prompt.tags || []).join(' '))} ${esc(prompt.category || '')}">
+      <div class="pch">
+        <span class="ptype ${typeClass}">${safeType}</span>
+        <span class="pname">${safeTitle}</span>
+        <button class="cpbtn" onclick="cp(this)">⎘ Copia</button>
+      </div>
+      <div class="pbody">
+        <div class="ptext">${safeContent}</div>
+        <div class="pmeta">
+          <span class="pmi">Tipo: <strong>${safeType}</strong></span>
+          <span class="pmi">Variabili: <strong>${safeVars}</strong></span>
+          <span class="pmi">Output: <strong>${safeOutput}</strong></span>
+          ${tags ? `<span class="pmi">Tag: <strong>${tags}</strong></span>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function loadPromptsBySection(section) {
+  const sec = sanitizeSection(section);
+  const container = document.getElementById(`pg-${sec}`);
+  if (!container) return;
+
+  container.innerHTML = '';
+  try {
+    const res = await fetch(`${API_BASE}/prompts/${sec}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders()
+      }
+    });
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        localStorage.removeItem('bpm_token');
+        authToken = '';
+        document.getElementById('authGate').classList.remove('hidden');
+      }
+      return;
+    }
+
+    const body = await res.json();
+    const items = body.data || [];
+    if (!items.length) {
+      container.innerHTML = '<div class="pcard"><div class="pbody"><div class="ptext">Nessun prompt presente per questa fase. Usa il pulsante "Nuovo prompt".</div></div></div>';
+      return;
+    }
+    container.innerHTML = items.map(promptCardTemplate).join('');
+  } catch (err) {
+    container.innerHTML = '<div class="pcard"><div class="pbody"><div class="ptext">Errore connessione API. Controlla che il microservizio sia attivo.</div></div></div>';
+  }
+}
+
+function addPromptButtons() {
+  document.querySelectorAll('.pb').forEach((bar) => {
+    if (bar.querySelector('.new-prompt-btn')) return;
+    const btn = document.createElement('button');
+    btn.className = 'fbtn new-prompt-btn';
+    btn.type = 'button';
+    btn.textContent = '+ Nuovo prompt';
+    btn.onclick = () => {
+      const page = bar.closest('.page')?.id || 'page-s1';
+      const sec = sanitizeSection(page.replace('page-', ''));
+      openPromptModal(sec);
+    };
+    bar.appendChild(btn);
+  });
+}
+
+function openPromptModal(section) {
+  document.getElementById('pmSection').value = sanitizeSection(section);
+  document.getElementById('promptModal').classList.add('show');
+}
+
+function closePromptModal() {
+  document.getElementById('promptModal').classList.remove('show');
+  document.getElementById('pmCategory').value = '';
+  document.getElementById('pmTitle').value = '';
+  document.getElementById('pmContent').value = '';
+  document.getElementById('pmVariables').value = '';
+  document.getElementById('pmOutput').value = '';
+  document.getElementById('pmTags').value = '';
+}
+
+async function savePrompt() {
+  const payload = {
+    section: document.getElementById('pmSection').value,
+    category: document.getElementById('pmCategory').value,
+    title: document.getElementById('pmTitle').value,
+    content: document.getElementById('pmContent').value,
+    variables: document.getElementById('pmVariables').value,
+    output: document.getElementById('pmOutput').value,
+    tags: document.getElementById('pmTags').value
+  };
+
+  const res = await fetch(`${API_BASE}/prompts`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders()
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Errore salvataggio prompt' }));
+    alert(body.error || 'Errore salvataggio prompt');
+    return;
+  }
+
+  closePromptModal();
+  await loadPromptsBySection(payload.section);
+}
+
+async function bootstrapProtectedArea() {
+  addPromptButtons();
+  for (let i = 1; i <= 10; i += 1) {
+    await loadPromptsBySection(`s${i}`);
+  }
+}
+
+async function loginWithAccessKey() {
+  const input = document.getElementById('accessKeyInput');
+  const accessKey = input.value.trim();
+  if (!accessKey) {
+    showAuthError('Inserisci la chiave di accesso');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessKey })
+    });
+
+    if (!res.ok) {
+      showAuthError('Chiave non valida');
+      return;
+    }
+
+    const body = await res.json();
+    authToken = body.token;
+    localStorage.setItem('bpm_token', authToken);
+    document.getElementById('authGate').classList.add('hidden');
+    showAuthError('');
+    input.value = '';
+    await bootstrapProtectedArea();
+  } catch (err) {
+    showAuthError('Microservizio non raggiungibile');
+  }
+}
+
+document.getElementById('accessKeyBtn').addEventListener('click', loginWithAccessKey);
+document.getElementById('accessKeyInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') loginWithAccessKey();
+});
+document.getElementById('pmClose').addEventListener('click', closePromptModal);
+document.getElementById('pmCancel').addEventListener('click', closePromptModal);
+document.getElementById('pmSave').addEventListener('click', savePrompt);
+
+window.addEventListener('load', async () => {
+  if (!authToken) return;
+  document.getElementById('authGate').classList.add('hidden');
+  await bootstrapProtectedArea();
+});
+</script>
+</body>
+</html>
